@@ -1,5 +1,6 @@
 const countSelect = document.getElementById("count");
 const spinButton = document.getElementById("spin");
+const spinTopButton = document.getElementById("spin-top");
 const result = document.getElementById("result");
 const wheel = document.getElementById("wheel");
 const ctx = wheel.getContext("2d");
@@ -81,6 +82,7 @@ function spinWheel() {
   const targetRotation = currentRotation + extraSpins + offsetToWinner;
 
   spinButton.disabled = true;
+  spinTopButton.disabled = true;
   result.textContent = "돌리는 중...";
 
   wheel.style.transform = `rotate(${targetRotation}deg)`;
@@ -89,6 +91,7 @@ function spinWheel() {
     currentRotation = targetRotation % 360;
     result.textContent = `결과: ${winnerIndex + 1}번`;
     spinButton.disabled = false;
+    spinTopButton.disabled = false;
   }, 3900);
 }
 
@@ -100,3 +103,4 @@ countSelect.addEventListener("change", () => {
 });
 
 spinButton.addEventListener("click", spinWheel);
+spinTopButton.addEventListener("click", spinWheel);

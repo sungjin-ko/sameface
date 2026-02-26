@@ -61,6 +61,13 @@ button {
     box-shadow: 0 8px 16px rgba(154, 59, 111, 0.2);
 }
 
+button.spin-top {
+    position: fixed;
+    top: 18px;
+    right: 18px;
+    z-index: 10;
+}
+
 button:disabled {
     opacity: 0.6;
     cursor: not-allowed;
