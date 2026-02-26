@@ -19,6 +19,7 @@ imageUpload.addEventListener('change', (event) => {
       const img = document.createElement('img');
       img.src = e.target.result;
       img.width = 200;
+      img.className = 'result-image';
       resultDiv.innerHTML = '';
       resultDiv.appendChild(img);
 

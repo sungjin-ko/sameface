@@ -3,15 +3,22 @@ body {
     display: flex;
     flex-direction: column;
     align-items: center;
-    background-color: #f0f2f5;
+    background: linear-gradient(180deg, #ffe4f1 0%, #ffd1e8 60%, #ffc2e0 100%);
+    color: #5b2238;
+    min-height: 100vh;
 }
 
 h1 {
-    color: #333;
+    color: #8a2a5e;
 }
 
 #image-upload {
     margin: 16px 0 20px;
+    background: #fff0f7;
+    color: #8a2a5e;
+    border: 2px solid #f2a7c9;
+    border-radius: 10px;
+    padding: 6px 10px;
 }
 
 .upload-illustration {
@@ -27,33 +34,40 @@ h1 {
 }
 
 .upload-illustration .frame {
-    fill: #f8fafc;
-    stroke: #cbd5e1;
+    fill: #fff0f7;
+    stroke: #f2a7c9;
     stroke-width: 3;
 }
 
 .upload-illustration .inner {
-    fill: #e2e8f0;
-    stroke: #94a3b8;
+    fill: #ffd9eb;
+    stroke: #e88bb8;
     stroke-width: 2;
 }
 
 .upload-illustration .sun {
-    fill: #fde68a;
-    stroke: #f59e0b;
+    fill: #ffe5f1;
+    stroke: #e88bb8;
     stroke-width: 2;
 }
 
 .upload-illustration .mountain-1 {
-    fill: #94a3b8;
+    fill: #e88bb8;
 }
 
 .upload-illustration .mountain-2 {
-    fill: #64748b;
+    fill: #c26a97;
 }
 
 #result {
     margin-top: 20px;
     font-size: 1.2em;
-    color: #555;
+    color: #7a2c52;
+}
+
+.result-image {
+    border: 4px solid #f2a7c9;
+    border-radius: 12px;
+    box-shadow: 0 8px 20px rgba(138, 42, 94, 0.18);
+    background: #fff;
 }
