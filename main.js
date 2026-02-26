@@ -9,6 +9,7 @@ const faceModelsReady = (window.faceapi && window.faceapi.nets)
       window.faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL),
     ])
   : Promise.reject(new Error("face-api.js not loaded"));
+const MATCH_THRESHOLD = 0.55;
 
 const WIKIDATA_SPARQL_URL = "https://query.wikidata.org/sparql";
 const IDOL_QUERY = `
@@ -138,24 +139,33 @@ async function fetchIdols() {
 }
 
 async function buildIdolDescriptors(idols, statusEl) {
+  const concurrency = 4;
+  let index = 0;
   let processed = 0;
-  for (const idol of idols) {
-    if (!idolDescriptorCache.has(idol.image)) {
-      try {
-        const img = await window.faceapi.fetchImage(idol.image);
-        const descriptor = await getFaceDescriptor(img);
-        if (descriptor) {
-          idolDescriptorCache.set(idol.image, descriptor);
+
+  async function worker() {
+    while (index < idols.length) {
+      const current = idols[index];
+      index += 1;
+      if (!idolDescriptorCache.has(current.image)) {
+        try {
+          const img = await window.faceapi.fetchImage(current.image);
+          const descriptor = await getFaceDescriptor(img);
+          if (descriptor) {
+            idolDescriptorCache.set(current.image, descriptor);
+          }
+        } catch {
+          // Skip images that fail to load or detect
         }
-      } catch {
-        // Skip images that fail to load or detect
+      }
+      processed += 1;
+      if (statusEl && processed % 10 === 0) {
+        statusEl.textContent = `아이돌 얼굴 분석 중... ${processed}/${idols.length}`;
       }
     }
-    processed += 1;
-    if (statusEl && processed % 10 === 0) {
-      statusEl.textContent = `아이돌 얼굴 분석 중... ${processed}/${idols.length}`;
-    }
   }
+
+  await Promise.all(Array.from({ length: concurrency }, () => worker()));
   return idolDescriptorCache;
 }
 
@@ -207,27 +217,47 @@ imageUpload.addEventListener('change', (event) => {
         return;
       }
 
+      if (bestDistance > MATCH_THRESHOLD) {
+        status.textContent = '닮은꼴을 찾기 어려워요. 다른 사진으로 시도해주세요.';
+        return;
+      }
+
       const croppedUrl = await cropToFaceSquare(e.target.result);
       const userImage = document.createElement('img');
       userImage.src = croppedUrl;
       userImage.className = 'result-image';
       const userWrap = document.createElement('div');
-      userWrap.className = 'result-image-wrap';
-      userWrap.appendChild(userImage);
+      userWrap.className = 'result-card';
+      const userTitle = document.createElement('p');
+      userTitle.className = 'result-title';
+      userTitle.textContent = '업로드한 사진';
+      const userFrame = document.createElement('div');
+      userFrame.className = 'result-image-wrap';
+      userFrame.appendChild(userImage);
+      userWrap.appendChild(userTitle);
+      userWrap.appendChild(userFrame);
 
       const idolImage = document.createElement('img');
       idolImage.src = bestMatch.image;
       idolImage.alt = `${bestMatch.name} 사진`;
       idolImage.className = 'idol-image';
-      const idolCaption = document.createElement('p');
-      idolCaption.textContent = `닮은 아이돌: ${bestMatch.group}의 ${bestMatch.name}`;
+      const idolWrap = document.createElement('div');
+      idolWrap.className = 'result-card';
+      const idolTitle = document.createElement('p');
+      idolTitle.className = 'result-title';
+      idolTitle.textContent = '닮은 아이돌';
+      const idolName = document.createElement('p');
+      idolName.className = 'idol-name';
+      idolName.textContent = `${bestMatch.group}의 ${bestMatch.name}`;
+      idolWrap.appendChild(idolTitle);
+      idolWrap.appendChild(idolImage);
+      idolWrap.appendChild(idolName);
 
       resultDiv.innerHTML = '';
       const block = document.createElement('div');
       block.className = 'idol-result';
       block.appendChild(userWrap);
-      block.appendChild(idolImage);
-      block.appendChild(idolCaption);
+      block.appendChild(idolWrap);
       resultDiv.appendChild(block);
     };
     reader.readAsDataURL(file);
