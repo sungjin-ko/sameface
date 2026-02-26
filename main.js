@@ -103,36 +103,43 @@ async function fetchIdols() {
 
   idolFetchPromise = (async () => {
     const url = `${WIKIDATA_SPARQL_URL}?format=json&query=${encodeURIComponent(IDOL_QUERY)}`;
-    const response = await fetch(url, {
-      headers: { "Accept": "application/sparql-results+json" }
-    });
-    if (!response.ok) {
-      throw new Error("Failed to fetch idol data");
-    }
-    const data = await response.json();
-    const unique = new Map();
-    for (const row of data.results.bindings) {
-      const name = row.idolLabelKo?.value || row.idolLabelEn?.value || "";
-      if (!name || !row.image?.value) {
-        continue;
+    let errorContext = "";
+    try {
+      const response = await fetch(url, {
+        headers: { "Accept": "application/sparql-results+json" }
+      });
+      if (!response.ok) {
+        errorContext = `HTTP ${response.status}`;
+        throw new Error("Failed to fetch idol data");
       }
-      const key = `${name}|${row.image.value}`;
-      if (!unique.has(key)) {
-        unique.set(key, {
-          name,
-          group: row.groupLabel?.value || "Solo",
-          image: row.image.value
-        });
+      const data = await response.json();
+      const unique = new Map();
+      for (const row of data.results.bindings) {
+        const name = row.idolLabelKo?.value || row.idolLabelEn?.value || "";
+        if (!name || !row.image?.value) {
+          continue;
+        }
+        const key = `${name}|${row.image.value}`;
+        if (!unique.has(key)) {
+          unique.set(key, {
+            name,
+            group: row.groupLabel?.value || "Solo",
+            image: row.image.value
+          });
+        }
       }
-    }
 
-    const list = Array.from(unique.values());
-    if (list.length < 100) {
-      throw new Error("Not enough idols returned from query");
-    }
+      const list = Array.from(unique.values());
+      if (list.length < 100) {
+        errorContext = `Found only ${list.length}`;
+        throw new Error("Not enough idols returned from query");
+      }
 
-    idolCache = list.slice(0, 100);
-    return idolCache;
+      idolCache = list.slice(0, 100);
+      return idolCache;
+    } catch (error) {
+      throw new Error(`Wikidata fetch failed (${errorContext || "unknown"}): ${error.message}`);
+    }
   })();
 
   return idolFetchPromise;
@@ -190,8 +197,12 @@ imageUpload.addEventListener('change', (event) => {
       try {
         status.textContent = '아이돌 데이터 불러오는 중...';
         idols = await fetchIdols();
-      } catch {
-        status.textContent = '아이돌 데이터를 불러오지 못했어요.';
+      } catch (error) {
+        status.textContent = '아이돌 데이터를 불러오지 못했어요. 잠시 후 다시 시도해주세요.';
+        const debug = document.createElement('small');
+        debug.className = 'error-detail';
+        debug.textContent = error.message || 'unknown error';
+        resultDiv.appendChild(debug);
         return;
       }
 

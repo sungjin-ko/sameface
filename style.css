@@ -71,6 +71,14 @@ h1 {
     color: #7a2c52;
 }
 
+.error-detail {
+    display: block;
+    margin-top: 6px;
+    font-size: 0.75em;
+    color: #a33b6a;
+    opacity: 0.85;
+}
+
 .idol-result {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
