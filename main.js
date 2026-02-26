@@ -21,7 +21,10 @@ imageUpload.addEventListener('change', (event) => {
       img.width = 200;
       img.className = 'result-image';
       resultDiv.innerHTML = '';
-      resultDiv.appendChild(img);
+      const imgWrap = document.createElement('div');
+      imgWrap.className = 'result-image-wrap';
+      imgWrap.appendChild(img);
+      resultDiv.appendChild(imgWrap);
 
       // 아이돌 목록에서 무작위로 한 명을 선택
       const randomIdol = idols[Math.floor(Math.random() * idols.length)];
