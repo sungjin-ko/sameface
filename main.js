@@ -113,7 +113,6 @@ imageUpload.addEventListener('change', (event) => {
     reader.onload = (e) => {
       const img = document.createElement('img');
       img.src = e.target.result;
-      img.width = 200;
       img.className = 'result-image';
       resultDiv.innerHTML = '';
       const imgWrap = document.createElement('div');
