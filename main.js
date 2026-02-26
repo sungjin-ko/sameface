@@ -92,7 +92,7 @@ function spinWheel() {
     result.textContent = `결과: ${winnerIndex + 1}번`;
     spinButton.disabled = false;
     spinTopButton.disabled = false;
-  }, 3900);
+  }, 5100);
 }
 
 buildOptions();
