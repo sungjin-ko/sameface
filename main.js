@@ -1,6 +1,10 @@
 
 const imageUpload = document.getElementById('image-upload');
 const resultDiv = document.getElementById('result');
+const MODEL_URL = "https://cdn.jsdelivr.net/gh/justadudewhohacks/face-api.js/weights";
+const faceModelReady = (window.faceapi && window.faceapi.nets)
+  ? window.faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL)
+  : Promise.reject(new Error("face-api.js not loaded"));
 
 // 임시 아이돌 데이터
 const idols = [
@@ -106,13 +110,66 @@ const idols = [
   { name: "박초롱", group: "Apink" }
 ];
 
+async function loadImage(dataUrl) {
+  const img = new Image();
+  img.src = dataUrl;
+  await img.decode();
+  return img;
+}
+
+function clamp(value, min, max) {
+  return Math.max(min, Math.min(max, value));
+}
+
+async function cropToFaceSquare(dataUrl) {
+  const img = await loadImage(dataUrl);
+  let box = null;
+
+  try {
+    await faceModelReady;
+    const detection = await window.faceapi.detectSingleFace(
+      img,
+      new window.faceapi.TinyFaceDetectorOptions({ inputSize: 320, scoreThreshold: 0.5 })
+    );
+    if (detection) {
+      box = detection.box;
+    }
+  } catch {
+    // Fallback to center crop if model fails
+  }
+
+  const imgW = img.naturalWidth || img.width;
+  const imgH = img.naturalHeight || img.height;
+  const minSide = Math.min(imgW, imgH);
+
+  let size = minSide;
+  let sx = (imgW - size) / 2;
+  let sy = (imgH - size) / 2;
+
+  if (box) {
+    const cx = box.x + box.width / 2;
+    const cy = box.y + box.height / 2;
+    size = Math.min(Math.max(box.width, box.height) * 1.6, imgW, imgH);
+    sx = clamp(cx - size / 2, 0, imgW - size);
+    sy = clamp(cy - size / 2, 0, imgH - size);
+  }
+
+  const canvas = document.createElement('canvas');
+  canvas.width = Math.round(size);
+  canvas.height = Math.round(size);
+  const ctx = canvas.getContext('2d');
+  ctx.drawImage(img, sx, sy, size, size, 0, 0, canvas.width, canvas.height);
+  return canvas.toDataURL('image/png');
+}
+
 imageUpload.addEventListener('change', (event) => {
   const file = event.target.files[0];
   if (file) {
     const reader = new FileReader();
-    reader.onload = (e) => {
+    reader.onload = async (e) => {
+      const croppedUrl = await cropToFaceSquare(e.target.result);
       const img = document.createElement('img');
-      img.src = e.target.result;
+      img.src = croppedUrl;
       img.className = 'result-image';
       resultDiv.innerHTML = '';
       const imgWrap = document.createElement('div');
