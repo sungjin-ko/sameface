@@ -2,113 +2,34 @@
 const imageUpload = document.getElementById('image-upload');
 const resultDiv = document.getElementById('result');
 const MODEL_URL = "https://cdn.jsdelivr.net/gh/justadudewhohacks/face-api.js/weights";
-const faceModelReady = (window.faceapi && window.faceapi.nets)
-  ? window.faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL)
+const faceModelsReady = (window.faceapi && window.faceapi.nets)
+  ? Promise.all([
+      window.faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL),
+      window.faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL),
+      window.faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL),
+    ])
   : Promise.reject(new Error("face-api.js not loaded"));
 
-// 임시 아이돌 데이터
-const idols = [
-  { name: "성현우", group: "Limitless" },
-  { name: "장우영", group: "VAV" },
-  { name: "권애지", group: "Hashtag" },
-  { name: "이아인", group: "MOMOLAND" },
-  { name: "고아라", group: "Favorite" },
-  { name: "조자영", group: "Dal Shabet" },
-  { name: "강아형", group: "P.O.P" },
-  { name: "김희정", group: "Pink Fantasy" },
-  { name: "허유림", group: "Everglow" },
-  { name: "송주희", group: "Hello Venus" },
-  { name: "앨런 마", group: "CRAVITY" },
-  { name: "엠버 조세핀 리우", group: "f(x)" },
-  { name: "이서영", group: "GWSN" },
-  { name: "엔써니 루오", group: "VARSITY" },
-  { name: "박예림", group: "Pink Fantasy" },
-  { name: "김선영", group: "Tahiti" },
-  { name: "황나윤", group: "RedSquare" },
-  { name: "전민재", group: "MIXX" },
-  { name: "최예원", group: "Oh My Girl" },
-  { name: "곽영민", group: "NU'EST" },
-  { name: "하나다 아사히", group: "Treasure" },
-  { name: "애슐리 최", group: "Ladies' Code" },
-  { name: "양안", group: "NATURE" },
-  { name: "박동혁", group: "ENOi" },
-  { name: "노윤호", group: "VAV" },
-  { name: "이민혁", group: "Block B" },
-  { name: "김병주", group: "Topp Dogg" },
-  { name: "이영수", group: "14U" },
-  { name: "이수정", group: "Lovelyz" },
-  { name: "김바다", group: "Hinapia" },
-  { name: "김수아", group: "NeonPunch" },
-  { name: "강동호", group: "NU'EST" },
-  { name: "변백현", group: "EXO" },
-  { name: "꾼삐묵 부와꾼", group: "GOT7" },
-  { name: "방찬", group: "Stray Kids" },
-  { name: "차선우", group: "B1A4" },
-  { name: "최충협", group: "VAV" },
-  { name: "진성호", group: "1TEAM" },
-  { name: "최성훈", group: "DUSTIN" },
-  { name: "최윤아", group: "ELRIS" },
-  { name: "진현주", group: "Cignature" },
-  { name: "배제욱", group: "B.I.G" },
-  { name: "최범규", group: "TXT" },
-  { name: "유지원", group: "ANS" },
-  { name: "남승민", group: "MCND" },
-  { name: "김수빈", group: "Hot Blood Youth" },
-  { name: "배유빈", group: "Oh My Girl" },
-  { name: "김상연", group: "MONT" },
-  { name: "이창현", group: "UP10TION" },
-  { name: "정가희", group: "Pungdeng-E" },
-  { name: "매튜김", group: "KARD" },
-  { name: "김보아", group: "SPICA" },
-  { name: "김지원", group: "iKON" },
-  { name: "김보형", group: "SPICA" },
-  { name: "김복은", group: "SIGNAL" },
-  { name: "박봄", group: "2NE1" },
-  { name: "윤보미", group: "Apink" },
-  { name: "최보민", group: "Golden Child" },
-  { name: "김보민", group: "RedSquare" },
-  { name: "김지연", group: "Cosmic Girls" },
-  { name: "최의정", group: "Dreamnote" },
-  { name: "윤보라", group: "SISTAR" },
-  { name: "김보라", group: "Cherry Bullet" },
-  { name: "전보람", group: "T-ara" },
-  { name: "진준우", group: "VARSITY" },
-  { name: "이병곤", group: "CIX" },
-  { name: "최병찬", group: "VICTON" },
-  { name: "방민수", group: "Teen Top" },
-  { name: "차오루", group: "Fiestar" },
-  { name: "저효상", group: "CROSS GENE" },
-  { name: "손성준", group: "MCND" },
-  { name: "차훈", group: "N.Flying" },
-  { name: "김채영", group: "RedSquare" },
-  { name: "최유빈", group: "NATURE" },
-  { name: "김채현", group: "Bonus Baby" },
-  { name: "채진석", group: "MYNAME" },
-  { name: "윤채경", group: "APRIL" },
-  { name: "이채린", group: "FANATICS" },
-  { name: "박채린", group: "Cherry Bullet" },
-  { name: "이채령", group: "ITZY" },
-  { name: "맹채솔", group: "Cignature" },
-  { name: "김채원", group: "APRIL" },
-  { name: "김채원", group: "IZ*ONE" },
-  { name: "송채연", group: "CRAXY" },
-  { name: "정채연", group: "DIA" },
-  { name: "김채연", group: "Busters" },
-  { name: "이채연", group: "IZ*ONE" },
-  { name: "황찬성", group: "2PM" },
-  { name: "박찬열", group: "EXO" },
-  { name: "김찬용", group: "100%" },
-  { name: "김찬영", group: "D-CRUNCH" },
-  { name: "김종대", group: "EXO" },
-  { name: "청샤오", group: "Cosmic Girls" },
-  { name: "중천러", group: "NCT" },
-  { name: "장청음", group: "Ho1iday" },
-  { name: "지아이", group: "FANATICS" },
-  { name: "최치훈", group: "TOO" },
-  { name: "허민진", group: "Crayon Pop" },
-  { name: "최예림", group: "LOONA" },
-  { name: "박초롱", group: "Apink" }
-];
+const WIKIDATA_SPARQL_URL = "https://query.wikidata.org/sparql";
+const IDOL_QUERY = `
+PREFIX wd: <http://www.wikidata.org/entity/>
+PREFIX wdt: <http://www.wikidata.org/prop/direct/>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+SELECT ?idol ?idolLabelKo ?idolLabelEn (SAMPLE(?groupLabel) AS ?groupLabel) ?image WHERE {
+  ?idol wdt:P31 wd:Q5;
+        wdt:P106 wd:Q521987;
+        wdt:P18 ?image.
+  OPTIONAL { ?idol wdt:P463 ?group. }
+  OPTIONAL { ?idol rdfs:label ?idolLabelKo FILTER (lang(?idolLabelKo)="ko") }
+  OPTIONAL { ?idol rdfs:label ?idolLabelEn FILTER (lang(?idolLabelEn)="en") }
+  OPTIONAL { ?group rdfs:label ?groupLabel FILTER (lang(?groupLabel)="en") }
+}
+GROUP BY ?idol ?idolLabelKo ?idolLabelEn ?image
+LIMIT 200
+`;
+const idolDescriptorCache = new Map();
+let idolCache = null;
+let idolFetchPromise = null;
 
 async function loadImage(dataUrl) {
   const img = new Image();
@@ -126,7 +47,7 @@ async function cropToFaceSquare(dataUrl) {
   let box = null;
 
   try {
-    await faceModelReady;
+    await faceModelsReady;
     const detection = await window.faceapi.detectSingleFace(
       img,
       new window.faceapi.TinyFaceDetectorOptions({ inputSize: 320, scoreThreshold: 0.5 })
@@ -162,27 +83,152 @@ async function cropToFaceSquare(dataUrl) {
   return canvas.toDataURL('image/png');
 }
 
+async function getFaceDescriptor(img) {
+  await faceModelsReady;
+  const detection = await window.faceapi.detectSingleFace(
+    img,
+    new window.faceapi.TinyFaceDetectorOptions({ inputSize: 320, scoreThreshold: 0.5 })
+  ).withFaceLandmarks().withFaceDescriptor();
+  return detection ? detection.descriptor : null;
+}
+
+async function fetchIdols() {
+  if (idolCache) {
+    return idolCache;
+  }
+  if (idolFetchPromise) {
+    return idolFetchPromise;
+  }
+
+  idolFetchPromise = (async () => {
+    const url = `${WIKIDATA_SPARQL_URL}?format=json&query=${encodeURIComponent(IDOL_QUERY)}`;
+    const response = await fetch(url, {
+      headers: { "Accept": "application/sparql-results+json" }
+    });
+    if (!response.ok) {
+      throw new Error("Failed to fetch idol data");
+    }
+    const data = await response.json();
+    const unique = new Map();
+    for (const row of data.results.bindings) {
+      const name = row.idolLabelKo?.value || row.idolLabelEn?.value || "";
+      if (!name || !row.image?.value) {
+        continue;
+      }
+      const key = `${name}|${row.image.value}`;
+      if (!unique.has(key)) {
+        unique.set(key, {
+          name,
+          group: row.groupLabel?.value || "Solo",
+          image: row.image.value
+        });
+      }
+    }
+
+    const list = Array.from(unique.values());
+    if (list.length < 100) {
+      throw new Error("Not enough idols returned from query");
+    }
+
+    idolCache = list.slice(0, 100);
+    return idolCache;
+  })();
+
+  return idolFetchPromise;
+}
+
+async function buildIdolDescriptors(idols, statusEl) {
+  let processed = 0;
+  for (const idol of idols) {
+    if (!idolDescriptorCache.has(idol.image)) {
+      try {
+        const img = await window.faceapi.fetchImage(idol.image);
+        const descriptor = await getFaceDescriptor(img);
+        if (descriptor) {
+          idolDescriptorCache.set(idol.image, descriptor);
+        }
+      } catch {
+        // Skip images that fail to load or detect
+      }
+    }
+    processed += 1;
+    if (statusEl && processed % 10 === 0) {
+      statusEl.textContent = `아이돌 얼굴 분석 중... ${processed}/${idols.length}`;
+    }
+  }
+  return idolDescriptorCache;
+}
+
 imageUpload.addEventListener('change', (event) => {
   const file = event.target.files[0];
   if (file) {
     const reader = new FileReader();
     reader.onload = async (e) => {
-      const croppedUrl = await cropToFaceSquare(e.target.result);
-      const img = document.createElement('img');
-      img.src = croppedUrl;
-      img.className = 'result-image';
       resultDiv.innerHTML = '';
-      const imgWrap = document.createElement('div');
-      imgWrap.className = 'result-image-wrap';
-      imgWrap.appendChild(img);
-      resultDiv.appendChild(imgWrap);
+      const status = document.createElement('p');
+      status.textContent = '사진을 분석 중...';
+      resultDiv.appendChild(status);
 
-      // 아이돌 목록에서 무작위로 한 명을 선택
-      const randomIdol = idols[Math.floor(Math.random() * idols.length)];
+      const userImg = await loadImage(e.target.result);
+      const userDescriptor = await getFaceDescriptor(userImg);
+      if (!userDescriptor) {
+        status.textContent = '얼굴을 찾지 못했어요. 다른 사진을 올려주세요.';
+        return;
+      }
 
-      const resultText = document.createElement('p');
-      resultText.textContent = `당신은 ${randomIdol.group}의 ${randomIdol.name}을(를) 닮았네요!`;
-      resultDiv.appendChild(resultText);
+      let idols;
+      try {
+        status.textContent = '아이돌 데이터 불러오는 중...';
+        idols = await fetchIdols();
+      } catch {
+        status.textContent = '아이돌 데이터를 불러오지 못했어요.';
+        return;
+      }
+
+      status.textContent = `아이돌 얼굴 분석 중... 0/${idols.length}`;
+      const descriptors = await buildIdolDescriptors(idols, status);
+
+      let bestMatch = null;
+      let bestDistance = Infinity;
+      for (const idol of idols) {
+        const idolDesc = descriptors.get(idol.image);
+        if (!idolDesc) {
+          continue;
+        }
+        const distance = window.faceapi.euclideanDistance(userDescriptor, idolDesc);
+        if (distance < bestDistance) {
+          bestDistance = distance;
+          bestMatch = idol;
+        }
+      }
+
+      if (!bestMatch) {
+        status.textContent = '아이돌 얼굴을 인식하지 못했어요. 잠시 후 다시 시도해주세요.';
+        return;
+      }
+
+      const croppedUrl = await cropToFaceSquare(e.target.result);
+      const userImage = document.createElement('img');
+      userImage.src = croppedUrl;
+      userImage.className = 'result-image';
+      const userWrap = document.createElement('div');
+      userWrap.className = 'result-image-wrap';
+      userWrap.appendChild(userImage);
+
+      const idolImage = document.createElement('img');
+      idolImage.src = bestMatch.image;
+      idolImage.alt = `${bestMatch.name} 사진`;
+      idolImage.className = 'idol-image';
+      const idolCaption = document.createElement('p');
+      idolCaption.textContent = `닮은 아이돌: ${bestMatch.group}의 ${bestMatch.name}`;
+
+      resultDiv.innerHTML = '';
+      const block = document.createElement('div');
+      block.className = 'idol-result';
+      block.appendChild(userWrap);
+      block.appendChild(idolImage);
+      block.appendChild(idolCaption);
+      resultDiv.appendChild(block);
     };
     reader.readAsDataURL(file);
   }
